@@ -1,11 +1,27 @@
-// A working news-image-daily entry (Node 22, standard library only): its image is the entry.png beside this file, and
-// the program copies it to /output/entry.png. A starting point, not a winner: replace the image. The gate takes a
-// whole PNG or JPEG of at most 1 MiB and 1024 by 1024 pixels, and the judge sees exactly the bytes copied.
+// News Image — 20 November 2026.
+// This program writes the entry image to the output directory:
+// it copies entry.png from this repository to <output>/entry.png.
 //
-// Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+// The output directory is never removed itself. In the grader it is
+// a Docker mount point, and deleting a mount point fails with EBUSY,
+// which would make the whole run fail. So we only clear what is
+// inside it, and create it first if it is missing.
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { copyFileSync } from 'node:fs';
-import { join } from 'node:path';
+const here = dirname(fileURLToPath(import.meta.url));
+const source = join(here, "entry.png");
+const outDir = resolve(process.env.MAKEFUN_OUTPUT_DIR ?? "/output");
 
-copyFileSync(new URL('./entry.png', import.meta.url), join(process.env.MAKEFUN_OUTPUT_DIR ?? '/output', 'entry.png'));
+if (!existsSync(source)) {
+  throw new Error(`entry image not found: ${source}`);
+}
+
+// Make sure the directory exists, then empty its contents only.
+mkdirSync(outDir, { recursive: true });
+for (const child of readdirSync(outDir)) {
+  rmSync(join(outDir, child), { recursive: true, force: true });
+}
+
+cpSync(source, join(outDir, "entry.png"));
