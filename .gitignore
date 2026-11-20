@@ -1,0 +1,8 @@
+# Local run output
+out/
+output/
+
+# Dependencies and editor files
+node_modules/
+.DS_Store
+*.log
